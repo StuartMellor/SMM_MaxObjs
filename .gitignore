@@ -1,0 +1,8 @@
+/connectToServ
+/BSMM_router
+/BSMM_node
+*.db
+*ipch
+*.opendb
+*.db-shm
+*.db-wal
