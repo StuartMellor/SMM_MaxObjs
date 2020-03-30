@@ -176,8 +176,14 @@
       <AdditionalDependencies>libserialport.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy "$(TargetPath)" "$(SolutionDir)"</Command>
+      <Command>del "$(SolutionDir)$(TargetFileName)"
+copy /y "$(TargetPath)" "$(SolutionDir)"
+del  "$(USERPROFILE)\Documents\Max 8\Packages\smm\"
+copy /y "$(TargetPath)" "$(USERPROFILE)\Documents\Max 8\Packages\smm\externals\"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>%(USERPROFILE)</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

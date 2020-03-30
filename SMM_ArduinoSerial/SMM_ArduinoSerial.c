@@ -1,88 +1,86 @@
-#include "ext.h"							// standard Max include, always required
-#include "ext_obex.h"						// required for new style Max object
+#include "ext.h"				
+#include "ext_obex.h"						
 #include  "libserialport.h"
 
-typedef struct _betterSerial
+typedef struct _SMM_ArduinoSerial
 {
 	t_object		ob;
-	t_atom			val;
-	t_symbol		*name;
-	void			*out;
+	void			*listout;
 	struct sp_port *port;
 	int				error;
 	char byte_buf[512];
-} t_betterSerial;
+} t_SMM_ArduinoSerial;
 
 const char* desired_port = "COM6";
 
-void *betterSerial_new(t_symbol *s, long argc, t_atom *argv);
-void betterSerial_free(t_betterSerial *x);
-void betterSerial_int(t_betterSerial *x, long n);
-void betterSerial_float(t_betterSerial *x, double f);
-void betterSerial_anything(t_betterSerial *x, t_symbol *s, long ac, t_atom *av);
-void betterSerial_bang(t_betterSerial *x);
+void *SMM_ArduinoSerial_new(t_symbol *s, long argc, t_atom *argv);
+void SMM_ArduinoSerial_free(t_SMM_ArduinoSerial *x);
+void SMM_ArduinoSerial_int(t_SMM_ArduinoSerial *x, long n);
+void SMM_ArduinoSerial_float(t_SMM_ArduinoSerial *x, double f);
+void SMM_ArduinoSerial_anything(t_SMM_ArduinoSerial *x, t_symbol *s, long ac, t_atom *av);
+void SMM_ArduinoSerial_bang(t_SMM_ArduinoSerial *x);
 void parse_serial(char *byte_buff, int byte_num);
-void betterSerial_initialise(t_betterSerial *x);
-void betterSerial_sendBytes(t_betterSerial *x);
-void betterSerial_receiveBuffer(t_betterSerial *x);
+void SMM_ArduinoSerial_initialise(t_SMM_ArduinoSerial *x);
+void SMM_ArduinoSerial_sendBytes(t_SMM_ArduinoSerial *x, char* bytes, int byteN);
+void SMM_ArduinoSerial_receiveBuffer(t_SMM_ArduinoSerial *x);
 
 void list_ports();
 
-void *betterSerial_class;
+void *SMM_ArduinoSerial_class;
 
 void ext_main(void *r)
 {
 	t_class *c;
 
-	c = class_new("betterSerial", (method)betterSerial_new, (method)betterSerial_free, (long)sizeof(t_betterSerial),
+	c = class_new("SMM_ArduinoSerial", (method)SMM_ArduinoSerial_new, (method)SMM_ArduinoSerial_free, (long)sizeof(t_SMM_ArduinoSerial),
 				  0L, A_GIMME, 0);
 
-	class_addmethod(c, (method)betterSerial_bang,			"bang", 0);
-	class_addmethod(c, (method)betterSerial_int,			"int",		A_LONG,		0);
-	class_addmethod(c, (method)betterSerial_float,			"float",	A_FLOAT,	0);
-	class_addmethod(c, (method)betterSerial_anything,		"anything",	A_GIMME,	0);
-	class_addmethod(c, (method)betterSerial_initialise,		"init",		0,			0);
-	class_addmethod(c, (method)betterSerial_receiveBuffer,	"getBuf",	0);
+	class_addmethod(c, (method)SMM_ArduinoSerial_bang,			"bang", 0);
+	class_addmethod(c, (method)SMM_ArduinoSerial_int,			"int",		A_LONG,		0);
+	class_addmethod(c, (method)SMM_ArduinoSerial_float,			"float",	A_FLOAT,	0);
+	class_addmethod(c, (method)SMM_ArduinoSerial_anything,		"anything",	A_GIMME,	0);
+	class_addmethod(c, (method)SMM_ArduinoSerial_initialise,		"init",		0,			0);
+	class_addmethod(c, (method)SMM_ArduinoSerial_receiveBuffer,	"getBuf",	0);
 
 	class_register(CLASS_BOX, c);
-	betterSerial_class = c;
+	SMM_ArduinoSerial_class = c;
 }
 
-void betterSerial_free(t_betterSerial *x)
+void SMM_ArduinoSerial_free(t_SMM_ArduinoSerial *x)
 {
 	;
 }
 
-void betterSerial_int(t_betterSerial *x, long n)
+void SMM_ArduinoSerial_int(t_SMM_ArduinoSerial *x, long n)
 {
 	switch (n) {
 	case 250:
-		betterSerial_sendBytes(x, '250', 1);
+		SMM_ArduinoSerial_sendBytes(x, '250', 1);
 		break;
 	}
 		
 }
 
-void betterSerial_float(t_betterSerial *x, double f)
+void SMM_ArduinoSerial_float(t_SMM_ArduinoSerial *x, double f)
 {
 }
 
-void betterSerial_anything(t_betterSerial *x, t_symbol *s, long ac, t_atom *av)
+void SMM_ArduinoSerial_anything(t_SMM_ArduinoSerial *x, t_symbol *s, long ac, t_atom *av)
 {
 }
 
-void betterSerial_bang(t_betterSerial *x)
+void SMM_ArduinoSerial_bang(t_SMM_ArduinoSerial *x)
 {
 }
 
 
 
-void *betterSerial_new(t_symbol *s, long argc, t_atom *argv)
+void *SMM_ArduinoSerial_new(t_symbol *s, long argc, t_atom *argv)
 {
-	t_betterSerial *x = NULL;
+	t_SMM_ArduinoSerial *x = NULL;
 
-	if ((x = (t_betterSerial *)object_alloc(betterSerial_class))) {
-
+	if ((x = (t_SMM_ArduinoSerial *)object_alloc(SMM_ArduinoSerial_class))) {
+		x->listout = listout(x);
 	}
 	return (x);
 }
@@ -112,7 +110,7 @@ void parse_serial(char *byte_buff, int byte_num) {
 	post("\n");
 }
 
-void betterSerial_initialise(t_betterSerial *x) {
+void SMM_ArduinoSerial_initialise(t_SMM_ArduinoSerial *x) {
 	int error = sp_get_port_by_name(desired_port, &x->port);
 	if (error == SP_OK) {
 		error = sp_open(x->port, SP_MODE_READ_WRITE);
@@ -123,11 +121,11 @@ void betterSerial_initialise(t_betterSerial *x) {
 }
 
 
-void betterSerial_sendBytes(t_betterSerial *x, char* bytes, int byteN) {
+void SMM_ArduinoSerial_sendBytes(t_SMM_ArduinoSerial *x, char* bytes, int byteN) {
 	sp_nonblocking_write(x->port, bytes, byteN);
 }
 
-void betterSerial_receiveBuffer(t_betterSerial *x) {
+void SMM_ArduinoSerial_receiveBuffer(t_SMM_ArduinoSerial *x) {
 	int bytes_waiting = sp_input_waiting(x->port);
 	if (bytes_waiting > 0) {
 		post("Bytes waiting %i,  ", bytes_waiting);
